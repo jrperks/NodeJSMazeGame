@@ -1,1 +1,2 @@
 Repository for a small maze game written in Node.js.
+Quick note: Please don't modify the maze#.txt files as they are the mazes used in the application. New mazes can be created by looking at Layouts.txt, simply make a maze and put each additional row of the maze onto the same line in the textfile - the application will split the maze back into proper shape again when it runs.
