@@ -1,0 +1,67 @@
+-This file isn't strictly mandatory, but as I used it to help work on this application
+(basically as a notebook of sorts) I wanted to include it anyway.
+
+########## ########## ########%# #%########
+#@______1# #a___#__@# #A____##X# #SRJK#C__#
+######8### ####_#2### ###z#H_P_# ###_####_#
+#____#_#g# #i_#0#_#y# #s#_#I##_# #u#B_____#
+#E##L#9f_# ##_h_3_#_# #_#_###Q_# #___######
+#_#M_#_### ##p#####_# #r#_j_#### ##t###_e_#
+#_D###n#_# #q_____x_# #__k#___c# ##_____#d#
+##_#_v__T# ######F### #####b#### ####l###_#
+#w___#o#U# #_WVON__G# #@__4___5# #m___#76@#
+########%# #%######## ########## ##########
+
+@ = start
+% = exit
+_ = floor
+# = wall
+1-0,a-z,A-Z = buttons and gates (1 unlocks 2, 3 unlocks 4, A unlocks B, etc. in that sequence)
+
+-Wanted to make gates close when players left the switches, but time constraints
+wouldn't allow it - didn't have time to make a puzzle that would be doable since this
+requires careful design to make sure a pathway doesn't get people stuck
+
+##########
+#@______o#
+######T###
+#____#_#o#
+#o##T#oT_#
+#_#o_#_###
+#_T###T#_#
+##_#_T__T#
+#o___#o#o#
+########%#
+
+##########
+#o___#__@#
+####_#T###
+#o_#T#_#o#
+##_T_o_#_#
+##T#####_#
+#o_____T_#
+######T###
+#_oToT__o#
+#%########
+
+########%#
+#o____##T#
+###T#T_T_#
+#o#_#o##_#
+#_#_###o_#
+#T#_T_####
+#__o#___o#
+#####T####
+#@__T___o#
+##########
+
+#%########
+#oTTo#o__#
+###_####_#
+#o#T_____#
+#___######
+##T###_o_#
+##_____#T#
+####T###_#
+#o___#oT@#
+##########

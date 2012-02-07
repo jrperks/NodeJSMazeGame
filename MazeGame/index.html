@@ -1,0 +1,193 @@
+<html>
+<head>
+<script src ="http://localhost:8000/socket.io/socket.io.js"></script>
+<script>
+  //Connection stuff.
+  var s = io.connect("http://localhost:8000/",{transports:["websocket"]});
+  var found = false;
+	var setup = false;
+  var player;
+  var maze = new Array(100);
+
+  //Reconnect function. Loops every 1.5 seconds.
+  function reconnect() {
+    s = io.connect("http://localhost:8000/",{transports:["websocket"]});
+    if(!found)
+      setTimeout("reconnect();",1500);
+  }
+  s.on("connect",function() {
+    found = true;
+  });
+  s.on("disconnect", function() {
+    document.getElementById("result").innerHTML = "Disconnected, trying to reconnect...";
+    found = false;
+    //begin a loop somewhere to reconnect to server
+    setTimeout("reconnect();",1500);
+  });
+  s.on("setup", function(pl,rMaze) {
+	//Set because this gets called every time someone logs in
+	//No doubt there's a better way to handle this but this works for now.
+		if(!setup)
+		{
+			setup = true;
+			player = pl;
+			document.getElementById("result").innerHTML = "Connected "+s.socket.transport.name+" - You are player #"+player;
+			//Get maze data from server.
+			maze = rMaze;
+			//Draw the maze (initial call, safe since it relies on maze being defined and it should be by this point)
+			drawMaze(true);
+		}
+  });
+	s.on("openGate", function(pl,xLoc,yLoc) {
+		if(player == pl)
+		{
+			//Determine n: n = (yLoc*10) + xLoc
+			var n = (yLoc*10) + xLoc;
+			//Set maze[n] to a _ (gate being opened, just make it a floor for simplicity)
+			maze[n] = "_";
+			//Redraw maze
+			drawMaze(false);
+		}
+	});
+	s.on("playerEscaped", function(pl) {
+		document.getElementById("win"+pl).innerHTML = "Player "+pl+" has escaped the maze!";
+	});
+	s.on("winMsg", function() {
+		document.getElementById("winall").innerHTML = "Congratulations! You win!";
+	});
+
+  //Variables
+  //Max width/height of maze (at the moment this HAS to stay at 10)
+  var maxX = 10;
+  var maxY = 10;
+  //identifiers for each individual space
+  var loc = new Array(maxX,maxY);
+  //Starting location of player
+  var x = 1;
+  var y = 8;
+  //incrementer variables
+  var i = 0;
+  var j = 0;
+  //Box test debug variable: forces the maze to be a simple box, basically.
+  //Normally it draws the maze from an array received from the server.
+  var boxTest = false;
+
+  //Functions
+  //Move player up
+  function moveUp() {
+    if(canPass(x,y-1)) y -= 1;
+    drawMaze(false);
+  }
+  //Move player down
+  function moveDown() {
+    if(canPass(x,y+1)) y += 1;
+    drawMaze(false);
+  }
+  //Move player left
+  function moveLeft() {
+    if(canPass(x-1,y)) x -= 1;
+    drawMaze(false);
+  }
+  //Move player right
+  function moveRight() {
+    if(canPass(x+1,y)) x += 1;
+    drawMaze(false);
+  }
+  //Determine if the player can pass through the given space
+  function canPass(x,y) {
+    //edge detection
+    if(x > maxX-1 || x < 0 || y > maxY-1 || y < 0) return false;
+    //space is a wall or a gate (can't pass at all)
+		var n = (y*10) + x;
+		if(maze[n] == "#" || maze[n] == "T") return false;
+		//space is a switch, send a signal trigger to the server
+		//to unlock the next gate
+		if(maze[n] == "o")
+			s.emit('triggerSwitch',player,n);
+		if(maze[n] == "%")
+			s.emit('iEscaped',player);
+    return true;
+  }
+
+  function initMaze() {
+    for(i=0;i<maxX;i++)
+      document.writeln("<div style=\"font-family:Courier New\" id=\"line"+i+"\"></div>");
+  }
+  function drawMaze(init) {
+    for(i=0;i<maxY;i++) {
+      var s = "";
+			if(boxTest == true) {
+				if(i == 0 || i == maxY-1) {
+					for(j=0;j<maxX;j++) s += "#";
+				}
+
+				else {
+					s += "#";
+					for(j=1;j<x;j++) s += "_";
+					if(i == y) s += "x";
+					else s += "_";
+					for(j=x;j<maxX-2;j++) s += "_";
+					s += "#";
+				}
+			}
+			else
+			{
+				var n;//Cursor for the maze array: n = y*10 + x
+				//If initial draw, determine starting point for player (different by maze)
+				if(init == true)
+				{
+					for(j=0;j<maxX;j++)
+					{
+						n = (i*10) + j;
+						if(maze[n] == "@")
+						{
+							x = j;
+							y = i;
+							maze[n] = "_";
+						}
+					}
+				}
+				for(j=0;j<maxX;j++)
+				{
+					n = (i*10) + j;
+					if(i == y && j == x)
+						s += "x";
+					else
+						s += maze[n];
+				}
+			}
+			document.getElementById("line"+i).innerHTML=s;
+    }
+  }
+</script>
+</head>
+<body>
+  <div id="test">Websocket Maze</div>
+<p>In this game, the objective is to escape from the maze with the help of three friends.
+The pathway is blocked by several gates which are triggered by switches. However, the
+switches in your maze will trigger the gates in the maze of one of your friends, and the
+switches of one of your other friends will trigger the gates for your maze. In order
+to escape, you all must work together to open each other's gates to proceed further.</p>
+
+<p>You move your player, the 'x' symbol on the map, using the four buttons below the map.
+Each button corresponds to a direction, and they are all labelled in the order up, down,
+left, right. # symbols are walls, which are unpassable, and _ symbols are floors, which
+are open. T symbols are gates which are initially unpassable, but once triggered by switches
+they turn into _ symbols and can then be walked on. The o symbol is a switch. Finally,
+the % symbol is the exit of the maze. Once a player reaches the exit, everyone else
+will be notified. When everyone reaches the exit, you win!</p>
+  <div id="result">Connecting...</div>
+<script>
+initMaze();
+</script>
+  <button type="button" onclick="moveUp()">^</button>
+  <button type="button" onclick="moveDown()">v</button>
+  <button type="button" onclick="moveLeft()"><</button>
+  <button type="button" onclick="moveRight()">></button>
+<div id="win1"></div>
+<div id="win2"></div>
+<div id="win3"></div>
+<div id="win4"></div>
+<div id="winall"></div>
+</body>
+</html>
