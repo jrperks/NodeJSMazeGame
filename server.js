@@ -238,5 +238,3 @@ io.sockets.on('connection', function(socket) {
 	}
   });
 });
-//onMove: send variable data to all four players
-//(this should be sent from a client whenever they move)
